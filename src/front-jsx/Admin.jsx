@@ -728,15 +728,22 @@ function Admin() {
         </main>
       </div>
 
-      {/* Modal de edición */}
+      {/* ✅ CORRECCIÓN SONARCLOUD: Modal de edición con accesibilidad mejorada */}
       {showEditModal && editingBooking && (
         <div
           className="admin__modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
+          role="presentation"
+          onClick={closeEditModal}
+          onKeyDown={(e) => e.key === 'Escape' && closeEditModal()}
         >
-          <div className="admin__modal admin__modal--wide">
+          <div
+            className="admin__modal admin__modal--wide"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <h3 id="edit-modal-title">Editar ticket</h3>
             <p className="admin__modal-subtitle">
               {editingBooking.nombre} {editingBooking.apellido} -{" "}
@@ -764,7 +771,6 @@ function Admin() {
                 </div>
 
                 <div className="admin__modal-field">
-                  {/* ✅ CORRECCIÓN SONARCLOUD: Cambiado <label> por <span> */}
                   <span className="admin__label-text">Fecha y hora de solicitud (solo lectura)</span>
                   <div className="admin__modal-readonly">
                     {safeFormatDate(
@@ -777,7 +783,6 @@ function Admin() {
                 {editStatus === "agendado" && (
                   <>
                     <div className="admin__modal-field">
-                      {/* ✅ CORRECCIÓN SONARCLOUD: Cambiado <label> por <span> */}
                       <span className="admin__label-text">Fecha de agenda</span>
                       <div className="admin__modal-calendar-wrapper">
                         <Calendar
@@ -861,19 +866,23 @@ function Admin() {
         </div>
       )}
 
-      {/* Modal de evidencia */}
+      {/* ✅ CORRECCIÓN SONARCLOUD: Modal de evidencia con accesibilidad mejorada */}
       {showEvidenciaModal && (
         <div
           className="admin__modal-overlay"
-          role="dialog"
-          aria-modal="true"
+          role="presentation"
           onClick={closeEvidenciaModal}
+          onKeyDown={(e) => e.key === 'Escape' && closeEvidenciaModal()}
         >
           <div
             className="admin__modal admin__modal--wide"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="evidencia-modal-title"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
-            <h3>Evidencia adjunta</h3>
+            <h3 id="evidencia-modal-title">Evidencia adjunta</h3>
             <p className="admin__modal-subtitle">
               <strong>Archivo:</strong> {evidenciaNombre}
             </p>
@@ -882,15 +891,15 @@ function Admin() {
                 (evidenciaTipo?.startsWith("image/") ||
                 evidenciaNombre?.match(/\.(jpe?g|png|gif|webp|bmp|svg)$/i) ? (
                   <img
-                    src={getSafeUrl(evidenciaData)} // ✅ CORRECCIÓN SONARCLOUD: Sanitizar src
-                    alt="Evidencia"
+                    src={getSafeUrl(evidenciaData)}
+                    alt="Evidencia adjunta"
                     className="admin__evidencia-imagen"
                   />
                 ) : (
                   <div className="admin__evidencia-descarga">
                     <p>Este archivo no se puede previsualizar directamente.</p>
                     <a
-                      href={getSafeUrl(evidenciaData)} // ✅ CORRECCIÓN SONARCLOUD: Sanitizar href
+                      href={getSafeUrl(evidenciaData)}
                       download={evidenciaNombre}
                       target="_blank"
                       rel="noopener noreferrer"
