@@ -29,7 +29,7 @@ export const statusLabels = {
   resuelto: "Resuelto",
 };
 
-// ✅ CORRECCIÓN SONARCLOUD: Uso de Number.isNaN en lugar de isNaN
+// ✅ CORRECCIÓN SONARCLOUD: Uso de Number.isNaN
 export const formatCurrency = (amount) => {
   const num = Number(amount);
   if (Number.isNaN(num)) return "$0";
@@ -194,20 +194,18 @@ export const useAdmin = () => {
 
       // Validaciones
       if (editStatus === "agendado" && (!editDate || !editTime)) {
-        // ✅ CORRECCIÓN SONARCLOUD: Usar setError en lugar de alert
         setError("Para agendar, debes seleccionar fecha y hora.");
         return;
       }
 
       if (editStatus === "resuelto") {
-        const parsed = parseFloat(editEarnings);
-        // ✅ CORRECCIÓN SONARCLOUD: Usar Number.isNaN en lugar de isNaN
+        // ✅ CORRECCIÓN SONARCLOUD: Uso de Number.parseFloat
+        const parsed = Number.parseFloat(editEarnings);
         if (Number.isNaN(parsed) || parsed < 0) {
           setError("Por favor ingresa una ganancia válida (número positivo).");
           return;
         }
         if (!editMotivo.trim()) {
-          // ✅ CORRECCIÓN SONARCLOUD: Usar setError en lugar de alert
           setError("Debes ingresar el motivo del cobro.");
           return;
         }
@@ -220,7 +218,8 @@ export const useAdmin = () => {
           editStatus === "agendado" ? editDate : editingBooking.fecha_agenda,
         hora_agenda:
           editStatus === "agendado" ? editTime : editingBooking.hora_agenda,
-        ganancia: editStatus === "resuelto" ? parseFloat(editEarnings) : null,
+        // ✅ CORRECCIÓN SONARCLOUD: Uso de Number.parseFloat aquí también
+        ganancia: editStatus === "resuelto" ? Number.parseFloat(editEarnings) : null,
         motivo_cobro: editStatus === "resuelto" ? editMotivo.trim() : "",
       };
 
@@ -234,7 +233,6 @@ export const useAdmin = () => {
         setSaveSuccess(true);
         setTimeout(closeEditModal, 1500);
       } catch (err) {
-        // ✅ CORRECCIÓN SONARCLOUD: Usar setError en lugar de alert
         setError("Error al guardar cambios: " + err.message);
       }
     },
