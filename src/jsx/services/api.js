@@ -3,12 +3,25 @@
 const API_BASE = 'http://localhost:8000/api';
 
 // --- Helpers de autenticación ---
+
 const getToken = () => localStorage.getItem('access_token');
 const getRefreshToken = () => localStorage.getItem('refresh_token');
-const setTokens = (access, refresh) => {
-  if (access) localStorage.setItem('access_token', access);
-  if (refresh) localStorage.setItem('refresh_token', refresh);
+
+// ✅ CORRECCIÓN SONARCLOUD: Función para validar que el string sea un JWT válido (evita inyecciones)
+const isValidJWT = (token) => {
+  return typeof token === 'string' && token.split('.').length === 3;
 };
+
+const setTokens = (access, refresh) => {
+  // ✅ CORRECCIÓN SONARCLOUD: Sanitizar/validar antes de guardar en localStorage
+  if (access && isValidJWT(access)) {
+    localStorage.setItem('access_token', access);
+  }
+  if (refresh && isValidJWT(refresh)) {
+    localStorage.setItem('refresh_token', refresh);
+  }
+};
+
 const clearTokens = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
@@ -23,7 +36,7 @@ const authHeaders = () => ({
 // --- Función para manejar errores de respuesta ---
 const handleResponse = async (response) => {
   if (!response.ok) {
-    let errorMessage;                                    // ← FIX: sin valor inicial (no-useless-assignment)
+    let errorMessage;
     try {
       const data = await response.json();
       errorMessage = data.detail || data.message || JSON.stringify(data);
@@ -65,7 +78,6 @@ const fetchWithAuth = async (url, options = {}) => {
       } catch (refreshError) {
         clearTokens();
         window.location.href = '/login';
-        // FIX: usa refreshError como cause (resuelve no-unused-vars + preserve-caught-error)
         throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.', {
           cause: refreshError,
         });
@@ -113,7 +125,6 @@ export const createBooking = async (data) => {
     } catch (refreshError) {
       clearTokens();
       window.location.href = '/login';
-      // FIX: usa refreshError como cause
       throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.', {
         cause: refreshError,
       });
@@ -168,10 +179,12 @@ export const login = async (email, password) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: email, password }),
   });
+
   if (!response.ok) {
     const data = await response.json();
     throw new Error(data.detail || 'Credenciales incorrectas');
   }
+
   const data = await response.json();
   setTokens(data.access, data.refresh);
   return data;
@@ -181,15 +194,18 @@ export const login = async (email, password) => {
 export const refreshToken = async () => {
   const refresh = getRefreshToken();
   if (!refresh) throw new Error('No hay refresh token');
+
   const response = await fetch(`${API_BASE}/token/refresh/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh }),
   });
+
   if (!response.ok) {
     clearTokens();
     throw new Error('Error al refrescar token');
   }
+
   const data = await response.json();
   setTokens(data.access, null);
   return data.access;
@@ -223,6 +239,7 @@ export const createReserva = async (reservaData) => {
 // 🆕 14. Consultar estado de una reserva (público) - RETORNA DIRECTAMENTE EL ARRAY
 export const fetchEstadoReserva = async (params) => {
   const query = new URLSearchParams();
+
   if (params.boleta) {
     if (params.boleta.length !== 16) {
       throw new Error('El número de boleta debe tener 16 dígitos.');
