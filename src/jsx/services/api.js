@@ -7,18 +7,26 @@ const API_BASE = 'http://localhost:8000/api';
 const getToken = () => localStorage.getItem('access_token');
 const getRefreshToken = () => localStorage.getItem('refresh_token');
 
-// ✅ CORRECCIÓN SONARCLOUD: Función para validar que el string sea un JWT válido (evita inyecciones)
-const isValidJWT = (token) => {
-  return typeof token === 'string' && token.split('.').length === 3;
+// ✅ CORRECCIÓN SONARCLOUD: Función de sanitización estricta
+const sanitizeToken = (token) => {
+  if (typeof token !== 'string') return '';
+  // Elimina cualquier caracter que no sea parte de un JWT estándar (letras, números, -, _, .)
+  // Esto destruye cualquier intento de inyección de scripts.
+  return token.replace(/[^A-Za-z0-9\-_.]/g, '');
 };
 
 const setTokens = (access, refresh) => {
-  // ✅ CORRECCIÓN SONARCLOUD: Sanitizar/validar antes de guardar en localStorage
-  if (access && isValidJWT(access)) {
-    localStorage.setItem('access_token', access);
+  // ✅ CORRECCIÓN SONARCLOUD: Saneamos los tokens antes de guardarlos
+  const safeAccess = sanitizeToken(access);
+  const safeRefresh = sanitizeToken(refresh);
+
+  // Verificamos que el token saneado tenga el formato JWT (3 partes)
+  if (safeAccess && safeAccess.split('.').length === 3) {
+    localStorage.setItem('access_token', safeAccess);
   }
-  if (refresh && isValidJWT(refresh)) {
-    localStorage.setItem('refresh_token', refresh);
+  
+  if (safeRefresh && safeRefresh.split('.').length === 3) {
+    localStorage.setItem('refresh_token', safeRefresh);
   }
 };
 
