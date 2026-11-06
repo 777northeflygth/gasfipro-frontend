@@ -48,10 +48,26 @@ const getMapsUrl = (direccion) => {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
 };
 
+// ✅ CORRECCIÓN SONARCLOUD: Sanitizar URLs de evidencias para evitar XSS
+const getSafeUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  // Permitir solo Base64 de imágenes, Blobs, HTTP/HTTPS o rutas relativas seguras
+  if (
+    url.startsWith("data:image/") ||
+    url.startsWith("blob:") ||
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("/media/")
+  ) {
+    return url;
+  }
+  return ""; // Bloquear javascript:, vbscript:, etc.
+};
+
 function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [syncing, setSyncing] = useState(false); // ✅ Estado para el botón de Calendar
+  const [syncing, setSyncing] = useState(false);
 
   const {
     bookings,
@@ -95,7 +111,7 @@ function Admin() {
 
   const handleLogout = () => navigate("/login");
 
-  // ✅ NUEVO - Función para sincronizar manualmente una reserva con Google Calendar
+  // ✅ Función para sincronizar manualmente con Google Calendar
   const handleSyncCalendar = async (bookingId) => {
     setSyncing(true);
     try {
@@ -246,7 +262,6 @@ function Admin() {
                       >
                         ✏️
                       </button>
-                      {/* ✅ NUEVO - Botón de sincronización con Google Calendar */}
                       <button
                         className="admin__btn"
                         style={{ backgroundColor: '#4285F4', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
@@ -645,16 +660,19 @@ function Admin() {
               type="password"
               placeholder="Contraseña actual"
               className="admin__input"
+              aria-label="Contraseña actual"
             />
             <input
               type="password"
               placeholder="Nueva contraseña"
               className="admin__input"
+              aria-label="Nueva contraseña"
             />
             <input
               type="password"
               placeholder="Confirmar nueva contraseña"
               className="admin__input"
+              aria-label="Confirmar nueva contraseña"
             />
             <button type="submit" className="admin__btn admin__btn--primary">
               Actualizar
@@ -746,7 +764,8 @@ function Admin() {
                 </div>
 
                 <div className="admin__modal-field">
-                  <label>Fecha y hora de solicitud (solo lectura)</label>
+                  {/* ✅ CORRECCIÓN SONARCLOUD: Cambiado <label> por <span> */}
+                  <span className="admin__label-text">Fecha y hora de solicitud (solo lectura)</span>
                   <div className="admin__modal-readonly">
                     {safeFormatDate(
                       editingBooking.created_at,
@@ -758,7 +777,8 @@ function Admin() {
                 {editStatus === "agendado" && (
                   <>
                     <div className="admin__modal-field">
-                      <label>Fecha de agenda</label>
+                      {/* ✅ CORRECCIÓN SONARCLOUD: Cambiado <label> por <span> */}
+                      <span className="admin__label-text">Fecha de agenda</span>
                       <div className="admin__modal-calendar-wrapper">
                         <Calendar
                           onChange={(date) =>
@@ -862,7 +882,7 @@ function Admin() {
                 (evidenciaTipo?.startsWith("image/") ||
                 evidenciaNombre?.match(/\.(jpe?g|png|gif|webp|bmp|svg)$/i) ? (
                   <img
-                    src={evidenciaData}
+                    src={getSafeUrl(evidenciaData)} // ✅ CORRECCIÓN SONARCLOUD: Sanitizar src
                     alt="Evidencia"
                     className="admin__evidencia-imagen"
                   />
@@ -870,7 +890,7 @@ function Admin() {
                   <div className="admin__evidencia-descarga">
                     <p>Este archivo no se puede previsualizar directamente.</p>
                     <a
-                      href={evidenciaData}
+                      href={getSafeUrl(evidenciaData)} // ✅ CORRECCIÓN SONARCLOUD: Sanitizar href
                       download={evidenciaNombre}
                       target="_blank"
                       rel="noopener noreferrer"
